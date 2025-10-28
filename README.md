@@ -24,8 +24,9 @@ https://osu.ppy.sh/home/account/edit
 点歌 b(bid)  
 点歌 s(sid)
 
-其他设置：
-api_server可以设置 sayo 或者 kitsu，设置后将会从指定的服务器获取谱面信息。你也可以通过魔改server.py添加其他API支持  
+其他设置：  
+api_server可以设置 sayo 或者 kitsu，设置后将会从指定的服务器获取谱面信息  
+你也可以通过魔改server.py添加其他API支持  
 unsafe_mode启用后将会强制通过爬取页面的方式获取谱面信息，这样获取的bid谱面链接默认为osu主模式，但不会影响跳转到指定谱面  
 
 

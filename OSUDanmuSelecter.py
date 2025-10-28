@@ -2,12 +2,12 @@ from irc_api import AsyncIRCClient
 import asyncio
 import aiohttp
 import http.cookies
-from typing import *
 import blivedm
 import blivedm.models.web as web_models
 import json
 from info_api import get_info as get_beatmap_info
 from pprint import pprint
+import re
 # ----------------------------
 # 测试示例
 # ----------------------------
@@ -29,24 +29,34 @@ irc = AsyncIRCClient(
     host="irc.ppy.sh",
     port=6667,
     nick=USER_NAME,
-    password=PASSWORD  # 修改为 "你的密码" 如果有
+    password=PASSWORD
 )
 
 def check_mapid(mapid:str) -> bool:
     return mapid[0] == "s" or  mapid[0] == "b"
 
-async def get_beatmap_url_ppy(mapid:str) -> str:
-    #搜不到用官网搜
+async def get_beatmap_unsafe(mapid:str) -> str:
+    # 通过官网跳转地址获取
     ppy_url = f"https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在获取链接")
     async with aiohttp.ClientSession() as session:
         async with session.get(ppy_url, allow_redirects=True) as resp:
-            map_url = str(resp.url)
             # 如果使用bid则添加#osu后缀，经测试可以正常跳转谱面
             if mapid[0] == "b":
-                return f"{str(resp.url)}#osu/{mapid[1:]}"
+                map_url = f"{str(resp.url)}#osu/{mapid[1:]}"
             else:
-                return str(resp.url)
+                map_url = str(resp.url)
+            print("尝试获取谱面标题")
+            # 获取网页HTML内容
+            html = await resp.text()
+            match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE)
+            if match:
+                title = match.group(1)[:match.group(1).rfind(" · ")]
+                print(f"获取成功：{title}")
+                return f"[{map_url} {title}]"
+            else:
+                print(f"获取失败")
+                return f"{map_url}"
 
 async def send_beatmap_url(mapid:str) -> None:
     print("获取谱面信息")
@@ -63,7 +73,7 @@ async def send_beatmap_url(mapid:str) -> None:
             beatmap_msg += f"[https://txy1.sayobot.cn/beatmaps/download/novideo/{sid}?server=auto (无视频)]"
     else:
         print("获取失败，将通过官网获取谱面地址")
-        map_url:str = await get_beatmap_url_ppy(mapid)
+        map_url:str = await get_beatmap_unsafe(mapid)
         sid = map_url.split("/")[-1]
         beatmap_msg = f"弹幕点歌: {map_url}"
 
@@ -79,7 +89,7 @@ async def send_msg(msg:str, target_name:str=USER_NAME):
 # 这里填一个已登录账号的cookie的SESSDATA字段的值。不填也可以连接，但是收到弹幕的用户名会打码，UID会变成0
 SESSDATA = ''
 
-session: Optional[aiohttp.ClientSession] = None
+session: aiohttp.ClientSession|None = None
 
 def init_session():
     cookies = http.cookies.SimpleCookie()
@@ -112,6 +122,5 @@ async def main():
         run_single_client(),
         irc.connect()
     )
-
     
 asyncio.run(main())

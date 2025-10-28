@@ -8,7 +8,9 @@ import blivedm.models.web as web_models
 import json
 from info_api import get_info as get_beatmap_info
 from pprint import pprint
-
+# ----------------------------
+# 测试示例
+# ----------------------------
 with open("setting.json","rb") as f:
     setting = json.load(f)
 
@@ -27,7 +29,7 @@ irc = AsyncIRCClient(
     host="irc.ppy.sh",
     port=6667,
     nick=USER_NAME,
-    password=PASSWORD
+    password=PASSWORD  # 修改为 "你的密码" 如果有
 )
 
 def check_mapid(mapid:str) -> bool:
@@ -39,7 +41,12 @@ async def get_beatmap_url_ppy(mapid:str) -> str:
     print("正在获取链接")
     async with aiohttp.ClientSession() as session:
         async with session.get(ppy_url, allow_redirects=True) as resp:
-            return str(resp.url)
+            map_url = str(resp.url)
+            # 如果使用bid则添加#osu后缀，经测试可以正常跳转谱面
+            if mapid[0] == "b":
+                return f"{str(resp.url)}#osu/{mapid[1:]}"
+            else:
+                return str(resp.url)
 
 async def send_beatmap_url(mapid:str) -> None:
     print("获取谱面信息")
@@ -55,7 +62,7 @@ async def send_beatmap_url(mapid:str) -> None:
             beatmap_msg += f"[https://txy1.sayobot.cn/beatmaps/download/{sid}?server=auto (带视频)]/"
             beatmap_msg += f"[https://txy1.sayobot.cn/beatmaps/download/novideo/{sid}?server=auto (无视频)]"
     else:
-        print("获取失败，将通过官网获取Baetmapset地址")
+        print("获取失败，将通过官网获取谱面地址")
         map_url:str = await get_beatmap_url_ppy(mapid)
         sid = map_url.split("/")[-1]
         beatmap_msg = f"弹幕点歌: {map_url}"
@@ -108,5 +115,3 @@ async def main():
 
     
 asyncio.run(main())
-
-

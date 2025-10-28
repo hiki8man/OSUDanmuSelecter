@@ -4,6 +4,7 @@ from typing import Any
 from collections.abc import Callable
 
 GET_INFO_COMMON: dict[str, Callable[[str, int], Any]] = {}
+TIMEOUT = 8
 
 async def get_url_json(url:str) -> dict:
     """
@@ -11,9 +12,9 @@ async def get_url_json(url:str) -> dict:
     如果没有信息就返回空字典  
     由于sayo镜像站使用的json返回有问题，因此需要解析为text再解析回json
     """
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=TIMEOUT)) as session:
         async with session.get(url=url) as response:
-            if response.start == 200:
+            if response.status == 200:
                 data_text = await response.text()
                 return json.loads(data_text)
             return {}
@@ -37,17 +38,21 @@ async def get_info(mapid_type:str, mapid_num:int, server_name:str|None = None) -
      "sid"   : BeatMapSetID  
      "url"   : 谱面链接"}  
     """
-    get_info_common = GET_INFO_COMMON
+    get_info_common = GET_INFO_COMMON.copy()
     if server_name:
+        print(f"正在尝试从{server_name}获取谱面信息")
         get_info = GET_INFO_COMMON[server_name]
-        info = get_info(mapid_type, mapid_num)
+        info = await get_info(mapid_type, mapid_num)
         if info:
             return info
         else:
             get_info_common.pop(server_name)
     
     for server_name in GET_INFO_COMMON:
+        print(f"正在尝试从{server_name}获取谱面信息")
         get_info = GET_INFO_COMMON[server_name]
         info = await get_info(mapid_type, mapid_num)
         if info:
             return info
+
+import server

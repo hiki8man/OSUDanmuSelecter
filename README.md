@@ -1,0 +1,2 @@
+基于Blivedm库实现的OSU弹幕点歌机  
+受到IRC私信方式限制不支持Lazer

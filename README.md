@@ -1,3 +1,4 @@
+![效果演示](https://github.com/hiki8man/OSUDanmuSelecter/blob/main/image/preview.jpg)
 基于Blivedm库实现的OSU弹幕点歌机  
 受到IRC私信方式限制不支持Lazer
 

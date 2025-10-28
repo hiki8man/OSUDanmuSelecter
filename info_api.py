@@ -54,5 +54,6 @@ async def get_info(mapid_type:str, mapid_num:int, server_name:str|None = None) -
         info = await get_info(mapid_type, mapid_num)
         if info:
             return info
+    print("获取谱面信息失败！镜像站没有该谱面或网络连接不佳")
 
 import server

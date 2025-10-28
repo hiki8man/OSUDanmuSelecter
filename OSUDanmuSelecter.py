@@ -16,6 +16,8 @@ with open("setting.json","rb") as f:
 USER_NAME:str = setting["osu_username"]
 PASSWORD:str = setting["irc_password"]
 ROOMID:str = setting["bili_room_id"]
+API_SERVER:str = setting["api_server"]
+UNSAFE_MODE:bool = setting["unsafe_mode"]
 
 if USER_NAME == "":
     raise ValueError("请在setting.json设置你的OSU用户名")
@@ -23,6 +25,9 @@ if PASSWORD == "":
     raise ValueError("请在setting.json设置irc密码")
 if ROOMID == "":
     raise ValueError("请在setting.json设置直播间房间号")
+if API_SERVER == "":
+    print("没有设置获取谱面信息API，将默认使用sayobot")
+    API_SERVER = "sayo"
 
 irc = AsyncIRCClient(
     host="irc.ppy.sh",
@@ -61,7 +66,8 @@ async def get_beatmap_unsafe(mapid:str) -> str:
                 return f"{map_url}"
 
 async def send_beatmap_url(mapid:str) -> None:
-    beatmapinfo = await get_beatmap_info(mapid[0], int(mapid[1:]), "sayo")
+    # 如果启用unsafe_mode将会直接从官网获取链接
+    beatmapinfo = None if UNSAFE_MODE else await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
         pprint(beatmapinfo)
         map_url:str = beatmapinfo["url"]
@@ -71,7 +77,7 @@ async def send_beatmap_url(mapid:str) -> None:
                                 f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]"
                                 ])
     else:
-        print("获取失败，将通过官网获取谱面地址")
+        print("正在通过官网获取谱面地址")
         map_url:str = await get_beatmap_unsafe(mapid)
         sid = map_url.split("/")[-1]
         beatmap_msg = f"收到弹幕点歌: {map_url}"

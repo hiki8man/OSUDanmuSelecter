@@ -8,9 +8,7 @@ import blivedm.models.web as web_models
 import json
 from info_api import get_info as get_beatmap_info
 from pprint import pprint
-# ----------------------------
-# 测试示例
-# ----------------------------
+
 with open("setting.json","rb") as f:
     setting = json.load(f)
 
@@ -110,4 +108,5 @@ async def main():
 
     
 asyncio.run(main())
+
 

@@ -8,9 +8,7 @@ import json
 from info_api import get_info as get_beatmap_info
 from pprint import pprint
 import re
-# ----------------------------
-# 测试示例
-# ----------------------------
+
 with open("setting.json","rb") as f:
     setting = json.load(f)
 
@@ -39,7 +37,7 @@ async def get_beatmap_unsafe(mapid:str) -> str:
     # 通过官网跳转地址获取
     ppy_url = f"https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在获取链接")
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
         async with session.get(ppy_url, allow_redirects=True) as resp:
             # 如果使用bid则添加#osu后缀，经测试可以正常跳转谱面
             if mapid[0] == "b":
@@ -47,7 +45,6 @@ async def get_beatmap_unsafe(mapid:str) -> str:
             else:
                 map_url = str(resp.url)
             print("尝试获取谱面标题")
-            # 获取网页HTML内容
             html = await resp.text()
             match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE)
             if match:

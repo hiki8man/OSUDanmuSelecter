@@ -11,7 +11,7 @@ async def get_url_json(url:str) -> dict:
     如果没有信息就返回空字典  
     由于sayo镜像站使用的json返回有问题，因此需要解析为text再解析回json
     """
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
         async with session.get(url=url) as response:
             if response.start == 200:
                 data_text = await response.text()

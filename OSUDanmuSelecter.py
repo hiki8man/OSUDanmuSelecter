@@ -29,7 +29,7 @@ irc = AsyncIRCClient(
     host="irc.ppy.sh",
     port=6667,
     nick=USER_NAME,
-    password=PASSWORD  # 修改为 "你的密码" 如果有
+    password=PASSWORD
 )
 
 def check_mapid(mapid:str) -> bool:
@@ -110,3 +110,4 @@ async def main():
 
     
 asyncio.run(main())
+

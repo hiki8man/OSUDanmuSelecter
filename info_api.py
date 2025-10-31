@@ -31,9 +31,12 @@ async def get_response(source_url:str) -> tuple[str, str]:
                 target_url = response.headers["Location"]
                 async with session.get(target_url) as response:
                     html_text = await response.text()
-            else:
+            if response.status == 200:
                 target_url = str(response.url)
                 html_text = await response.text()
+            if response.status == 404:
+                target_url = "404"
+                html_text  = "404 not found"
 
     return (target_url, html_text)
 

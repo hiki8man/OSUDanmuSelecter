@@ -47,7 +47,11 @@ def check_mapid(mapid:str) -> bool:
 async def get_beatmap_unsafe(mapid:str) -> str:
     print("正在获取链接与谱面标题")
     map_url, html_text = await get_response(f"https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}")
-
+    if map_url == "404":
+        map_url, html_text = await get_response(f"https://osu.ppy.sh/{"b" if mapid[0] == "s" else "s"}/{mapid[1:]}")
+        if map_url == "404":
+            raise ValueError("无法从官网获取谱面信息，请确认id是否有误")
+        
     # 预防不明原因导致重定向失败无法获取bid，伪造成osu主模式链接，经测试可以正常跳转
     if mapid[0] == "b" and not "#" in map_url:
         map_url += f"#osu/{mapid[1:]}"

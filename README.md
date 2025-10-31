@@ -18,7 +18,7 @@ https://osu.ppy.sh/home/account/edit
     "api_server":"sayo",
 }
 ```
-启动OSUDanmuSelecter.py即可
+安装好缺失的库，启动OSUDanmuSelecter.py即可
 
 弹幕指令：  
 点歌 b(bid)  

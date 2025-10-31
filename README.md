@@ -25,7 +25,7 @@ https://osu.ppy.sh/home/account/edit
 点歌 s(sid)
 
 其他设置：  
-api_server可以设置 osu_html, sayo, kitsu，设置后将会从指定的服务器获取谱面信息   
+api_server可以设置下列api，设置后将会从指定的服务器获取谱面信息   
 ```
 osu_html:从官网爬取页面信息获取谱面信息
 sayo：从sayo镜像站api获取谱面信息

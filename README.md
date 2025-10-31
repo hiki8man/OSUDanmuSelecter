@@ -25,11 +25,19 @@ https://osu.ppy.sh/home/account/edit
 点歌 s(sid)
 
 其他设置：  
+api_server可以设置 osu_html, sayo, kitsu，设置后将会从指定的服务器获取谱面信息   
 ```
-api_server可以设置 osu_html, sayo, kitsu，设置后将会从指定的服务器获取谱面信息
 osu_html:从官网爬取页面信息获取谱面信息
 sayo：从sayo镜像站api获取谱面信息
 kitsu：从kitsu镜像站api获取谱面信息
 ```
-你也可以通过魔改server.py添加其他API支持
-
+你也可以通过魔改server.py添加其他API支持，只需要给新添加的API函数添加修饰器 @register_info_server(API名称) 即可  
+需要注意函数要返回的是字典且必须包含这些信息：
+```
+{"server": API名称,
+"artist": 艺术家名，一般用英文,
+"title" : 歌曲名称，一般用英文,
+"sid"   : 谱面的beatmapset id,
+"url"   : 谱面链接，注意必须使用以 https://osu.ppy.sh/beatmapsets/ 开头的网址格式游戏内才能正常跳转谱面"
+}
+```

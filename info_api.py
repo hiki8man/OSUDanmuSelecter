@@ -19,6 +19,24 @@ async def get_url_json(url:str) -> dict:
                 return json.loads(data_text)
             return {}
 
+async def get_response(source_url:str) -> tuple[str, str]:
+    '''
+    使用aiohttp获取重定向一次后的链接与网页信息  
+    如果没有重定向则直接返回response的链接  
+    只适用于OSU这种只重定向一次的情况，其他情况需要考虑更改代码
+    '''
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=TIMEOUT)) as session:
+        async with session.get(source_url, allow_redirects=False) as response:
+            if response.status == 302 and "Location" in response.headers:
+                target_url = response.headers["Location"]
+                async with session.get(target_url) as response:
+                    html_text = await response.text()
+            else:
+                target_url = str(response.url)
+                html_text = await response.text()
+
+    return (target_url, html_text)
+
 def register_info_server(server_name:str):
     '''
     注册表装饰器，用于添加各类获取谱面信息的api函数

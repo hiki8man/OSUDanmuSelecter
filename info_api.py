@@ -35,11 +35,11 @@ async def get_response(source_url:str) -> tuple[str, str]:
                 async with session.get(target_url) as response:
                     html_text = await response.text()
 
-            if response.status == 200:
+            elif response.status == 200:
                 target_url = str(response.url)
                 html_text = await response.text()
 
-            if response.status == 404:
+            elif response.status == 404:
                 target_url = ""
                 html_text  = ""
 

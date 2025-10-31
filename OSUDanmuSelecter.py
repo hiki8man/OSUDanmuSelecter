@@ -40,7 +40,6 @@ def check_mapid(mapid:str) -> bool:
         return False
     
 async def send_beatmap_url(mapid:str) -> None:
-    # 如果启用unsafe_mode将会直接从官网获取链接
     beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
         pprint(beatmapinfo)
@@ -51,6 +50,7 @@ async def send_beatmap_url(mapid:str) -> None:
                                 f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]"
                                 ])
     else:
+        # 如果无法正常获取谱面信息则直接返回链接
         beatmap_msg = f"收到弹幕点歌：https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在发送信息")
     await send_msg(beatmap_msg)
@@ -99,3 +99,4 @@ async def main():
     )
     
 asyncio.run(main())
+

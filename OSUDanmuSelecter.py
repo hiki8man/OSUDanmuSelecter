@@ -40,7 +40,6 @@ def check_mapid(mapid:str) -> bool:
         return False
     
 async def send_beatmap_url(mapid:str,commit:str="") -> None:
-    # 如果启用unsafe_mode将会直接从官网获取链接
     beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
         pprint(beatmapinfo)
@@ -51,15 +50,18 @@ async def send_beatmap_url(mapid:str,commit:str="") -> None:
                                 f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]",
                                 ])
     else:
+        # 如果无法正常获取谱面信息则直接返回链接，不考虑正确性
         beatmap_msg = f"收到弹幕点歌：https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在发送信息")
-    await send_msg(beatmap_msg)
+    await send_msg(beatmap_msg, is_action=True)
     print("发送信息完成")
 
 
-async def send_msg(msg:str, target_name:str=USER_NAME):
+async def send_msg(msg:str, target_name:str=USER_NAME, is_action:bool=False):
     # 给自己发送消息
-    await irc.send_message(target_name, msg)
+    if is_action:
+        msg = f"\x01ACTION {msg}\x01"
+    await irc.send_privmsg(target_name, msg)
 
 # 这里填一个已登录账号的cookie的SESSDATA字段的值。不填也可以连接，但是收到弹幕的用户名会打码，UID会变成0
 SESSDATA = ''

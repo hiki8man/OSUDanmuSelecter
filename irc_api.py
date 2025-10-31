@@ -60,7 +60,7 @@ class AsyncIRCClient:
 
         print("[INFO] Listen loop exited.")
 
-    async def send_message(self, target: str, message: str):
+    async def send_privmsg(self, target: str, message: str):
         """向指定目标发送消息"""
         await self._send_raw(f"PRIVMSG {target} :{message}")
 

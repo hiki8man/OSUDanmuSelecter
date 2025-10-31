@@ -6,7 +6,7 @@ from collections.abc import Callable
 RE_BEATMAPSET = r'<script id="json-beatmapset" type="application/json">\n        (.*?)\n    </script>'
 
 GET_INFO_COMMON: dict[str, Callable[[str, int], Any]] = {}
-TIMEOUT = 8
+TIMEOUT = 5
 
 async def get_url_json(url:str) -> dict:
     """
@@ -64,7 +64,6 @@ async def get_info(mapid_type:str, mapid_num:int, server_name:str = "auto") -> d
      "sid"   : BeatMapSetID  
      "url"   : 谱面链接"}  
     """
-
     if server_name == "auto":
         for server_name in GET_INFO_COMMON:
             print(f"正在尝试从{server_name}获取谱面信息")

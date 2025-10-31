@@ -5,11 +5,7 @@ import blivedm.models.web as web_models
 import json
 from irc_api import AsyncIRCClient
 from info_api import get_info as get_beatmap_info
-from info_api import get_response
 from pprint import pprint
-import re
-
-TIMEOUT = 16
 
 with open("setting.json","rb") as f:
     setting = json.load(f)
@@ -18,7 +14,6 @@ USER_NAME:str = setting["osu_username"]
 PASSWORD:str = setting["irc_password"]
 ROOMID:str = setting["bili_room_id"]
 API_SERVER:str = setting["api_server"]
-UNSAFE_MODE:bool = setting["unsafe_mode"]
 
 if USER_NAME == "":
     raise ValueError("请在setting.json设置你的OSU用户名")
@@ -43,33 +38,10 @@ def check_mapid(mapid:str) -> bool:
         return mapid[0] == "s" or mapid[0] == "b"
     except ValueError:
         return False
-
-async def get_beatmap_unsafe(mapid:str) -> str:
-    print("正在获取链接与谱面标题")
-    map_url, html_text = await get_response(f"https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}")
-    if map_url == "404":
-        map_url, html_text = await get_response(f"https://osu.ppy.sh/{"b" if mapid[0] == "s" else "s"}/{mapid[1:]}")
-        if map_url == "404":
-            raise ValueError("无法从官网获取谱面信息，请确认id是否有误")
-        
-    # 预防不明原因导致重定向失败无法获取bid，伪造成osu主模式链接，经测试可以正常跳转
-    if mapid[0] == "b" and not "#" in map_url:
-        map_url += f"#osu/{mapid[1:]}"
     
-    #正则匹配搜索网页标题获取谱面标题信息
-    match = re.search(r'<title>(.*?)</title>', html_text, re.IGNORECASE)
-    if match:
-        title = match.group(1)[:match.group(1).rfind(" · ")]
-        print(f"{title}")
-        return f"[{map_url} {title}]"
-    
-    else:
-        print(f"谱面标题获取失败")
-        return f"{map_url}"
-
 async def send_beatmap_url(mapid:str) -> None:
     # 如果启用unsafe_mode将会直接从官网获取链接
-    beatmapinfo = None if UNSAFE_MODE else await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
+    beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
         pprint(beatmapinfo)
         map_url:str = beatmapinfo["url"]
@@ -79,11 +51,7 @@ async def send_beatmap_url(mapid:str) -> None:
                                 f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]"
                                 ])
     else:
-        print("正在通过官网获取谱面地址")
-        map_url:str = await get_beatmap_unsafe(mapid)
-        sid = map_url.split("/")[-1]
-        beatmap_msg = f"收到弹幕点歌: {map_url}"
-
+        beatmap_msg = f"收到弹幕点歌：https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在发送信息")
     await send_msg(beatmap_msg)
     print("发送信息完成")

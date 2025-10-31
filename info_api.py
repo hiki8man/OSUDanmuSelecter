@@ -1,7 +1,9 @@
 import aiohttp, asyncio
-import json
+import json, re
 from typing import Any
 from collections.abc import Callable
+
+RE_BEATMAPSET = r'<script id="json-beatmapset" type="application/json">\n        (.*?)\n    </script>'
 
 GET_INFO_COMMON: dict[str, Callable[[str, int], Any]] = {}
 TIMEOUT = 8
@@ -27,16 +29,19 @@ async def get_response(source_url:str) -> tuple[str, str]:
     '''
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=TIMEOUT)) as session:
         async with session.get(source_url, allow_redirects=False) as response:
+
             if response.status == 302 and "Location" in response.headers:
                 target_url = response.headers["Location"]
                 async with session.get(target_url) as response:
                     html_text = await response.text()
+
             if response.status == 200:
                 target_url = str(response.url)
                 html_text = await response.text()
+
             if response.status == 404:
-                target_url = "404"
-                html_text  = "404 not found"
+                target_url = ""
+                html_text  = ""
 
     return (target_url, html_text)
 
@@ -49,7 +54,7 @@ def register_info_server(server_name:str):
         return func
     return decorator
 
-async def get_info(mapid_type:str, mapid_num:int, server_name:str|None = None) -> dict|None:
+async def get_info(mapid_type:str, mapid_num:int, server_name:str = "auto") -> dict|None:
     """
     获取谱面信息，如果获取失败将会返回None  
     返回的字典：  
@@ -59,22 +64,43 @@ async def get_info(mapid_type:str, mapid_num:int, server_name:str|None = None) -
      "sid"   : BeatMapSetID  
      "url"   : 谱面链接"}  
     """
-    get_info_common = GET_INFO_COMMON.copy()
-    if server_name:
-        print(f"正在尝试从{server_name}获取谱面信息")
-        get_info = GET_INFO_COMMON[server_name]
-        info = await get_info(mapid_type, mapid_num)
-        if info:
+
+    if server_name == "auto":
+        for server_name in GET_INFO_COMMON:
+            print(f"正在尝试从{server_name}获取谱面信息")
+            info = await GET_INFO_COMMON[server_name](mapid_type, mapid_num)
+            if info:
+                return info
+    else:
+        print(f"正在获取谱面信息")
+        info = await GET_INFO_COMMON[server_name](mapid_type, mapid_num)
+        if info or server_name == "osu_html":
             return info
         else:
-            get_info_common.pop(server_name)
-    
-    for server_name in GET_INFO_COMMON:
-        print(f"正在尝试从{server_name}获取谱面信息")
-        get_info = GET_INFO_COMMON[server_name]
-        info = await get_info(mapid_type, mapid_num)
-        if info:
-            return info
-    print("获取谱面信息失败！镜像站没有该谱面或网络连接不佳")
+            return await GET_INFO_COMMON["osu_html"](mapid_type, mapid_num)
 
+# 从官网网页爬取谱面数据
+@register_info_server("osu_html")
+async def get_info_osu_html(mapid_type:str, mapid_num:int) -> dict[str,str]|None:
+    '''
+    解析谱面页面获取谱面信息  
+    '''
+    map_url, html_text = await get_response(f"https://osu.ppy.sh/{mapid_type}/{mapid_num}")
+    # 更换mapid类型尝试二次搜索
+    if not map_url:
+        mapid_type = "s" if mapid_type == "b" else "b"
+        map_url, html_text = await get_response(f"https://osu.ppy.sh/{mapid_type}/{mapid_num}")
+    
+    if map_url:
+        # 从网页获取谱面信息
+        match = re.search(RE_BEATMAPSET, html_text, re.IGNORECASE)
+        if match:
+            json_data = json.loads(match.group(1))
+            return  {"server": "osu_html",
+                     "artist": json_data["artist"],
+                     "title" : json_data["title"],
+                     "sid"   : json_data["id"],
+                     "url"   : map_url
+                    }
+# 导入第三方API
 import server

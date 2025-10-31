@@ -39,7 +39,8 @@ def check_mapid(mapid:str) -> bool:
     except ValueError:
         return False
     
-async def send_beatmap_url(mapid:str) -> None:
+async def send_beatmap_url(mapid:str,commit:str="") -> None:
+    # 如果启用unsafe_mode将会直接从官网获取链接
     beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
         pprint(beatmapinfo)
@@ -47,10 +48,9 @@ async def send_beatmap_url(mapid:str) -> None:
         sid = beatmapinfo["sid"]
         beatmap_msg = " ".join([f"收到弹幕点歌：[{map_url} {beatmapinfo["artist"]} - {beatmapinfo["title"]}]",
                                 f"Sayo分流：[https://osu.sayobot.cn/home?search={sid} osu.sayobot.cn]",
-                                f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]"
+                                f"kitsu分流：[https://osu.direct/beatmapsets/{sid} osu.direct]",
                                 ])
     else:
-        # 如果无法正常获取谱面信息则直接返回链接
         beatmap_msg = f"收到弹幕点歌：https://osu.ppy.sh/{mapid[0]}/{mapid[1:]}"
     print("正在发送信息")
     await send_msg(beatmap_msg)
@@ -86,8 +86,9 @@ async def run_single_client():
 class MyHandler(blivedm.BaseHandler):
 
     def _on_danmaku(self, client: blivedm.BLiveClient, message: web_models.DanmakuMessage):
-        match message.msg.split(maxsplit=1):
-            case [command,ID] if command.lower() == "点歌" and check_mapid(ID.lower()) :
+        # 避免弹幕再指令后附带了其他消息干扰程序判断
+        match message.msg.split(maxsplit=2):
+            case [command, ID, *_] if command.lower() == "点歌" and check_mapid(ID.lower()) :
                 print(f"弹幕点歌 {ID.lower()}")
                 asyncio.create_task(send_beatmap_url(str(ID.lower())))
 
@@ -99,4 +100,3 @@ async def main():
     )
     
 asyncio.run(main())
-

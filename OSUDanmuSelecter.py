@@ -38,7 +38,14 @@ def check_mapid(mapid:str) -> bool:
         return mapid[0] == "s" or mapid[0] == "b"
     except ValueError:
         return False
-    
+
+def is_int(mapid:str) -> bool:
+    try:
+        int(mapid)
+        return True
+    except:
+        return False
+
 async def send_beatmap_url(mapid:str,commit:str="") -> None:
     beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
     if beatmapinfo:
@@ -91,6 +98,10 @@ class MyHandler(blivedm.BaseHandler):
         # 避免弹幕再指令后附带了其他消息干扰程序判断
         match message.msg.split(maxsplit=2):
             case [command, ID, *_] if command.lower() == "点歌" and check_mapid(ID.lower()) :
+                print(f"弹幕点歌 {ID.lower()}")
+                asyncio.create_task(send_beatmap_url(str(ID.lower())))
+            case [command, ID, *_] if command.lower() == "点歌" and is_int(ID) :
+                ID = f"b{ID}"
                 print(f"弹幕点歌 {ID.lower()}")
                 asyncio.create_task(send_beatmap_url(str(ID.lower())))
 

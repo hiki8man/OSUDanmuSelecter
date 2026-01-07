@@ -6,6 +6,7 @@ import json
 from irc_api import AsyncIRCClient
 from info_api import get_info as get_beatmap_info
 from pprint import pprint
+import re
 
 with open("setting.json","rb") as f:
     setting = json.load(f)
@@ -32,19 +33,16 @@ irc = AsyncIRCClient(
     password=PASSWORD
 )
 
-def check_mapid(mapid:str) -> bool:
-    try:
-        int(mapid[1:])
-        return mapid[0] == "s" or mapid[0] == "b"
-    except ValueError:
-        return False
+def get_mapid(danmu_text:str) -> str|None:
+    # 收到明确表名为sid或bid
+    match = re.match(r"^点歌[\s]?/?([bBsS]\d+)",danmu_text)
+    if match:
+        return match.group(1).lower()
 
-def is_int(mapid:str) -> bool:
-    try:
-        int(mapid)
-        return True
-    except:
-        return False
+    # 只发了纯数字，处理为bid
+    match = re.match(r"^点歌[\s]?/?(\d+)",danmu_text)
+    if match:
+        return f"b{match.group(1)}"
 
 async def send_beatmap_url(mapid:str,commit:str="") -> None:
     beatmapinfo:dict|None = await get_beatmap_info(mapid[0], int(mapid[1:]), API_SERVER)
@@ -95,15 +93,10 @@ async def run_single_client():
 class MyHandler(blivedm.BaseHandler):
 
     def _on_danmaku(self, client: blivedm.BLiveClient, message: web_models.DanmakuMessage):
-        # 避免弹幕再指令后附带了其他消息干扰程序判断
-        match message.msg.split(maxsplit=2):
-            case [command, ID, *_] if command.lower() == "点歌" and check_mapid(ID.lower()) :
-                print(f"弹幕点歌 {ID.lower()}")
-                asyncio.create_task(send_beatmap_url(str(ID.lower())))
-            case [command, ID, *_] if command.lower() == "点歌" and is_int(ID) :
-                ID = f"b{ID}"
-                print(f"弹幕点歌 {ID.lower()}")
-                asyncio.create_task(send_beatmap_url(str(ID.lower())))
+        map_id = get_mapid(message.msg)
+        if map_id:
+            print(f"弹幕点歌 {map_id}")
+            asyncio.create_task(send_beatmap_url(str(map_id)))
 
 async def main():
     init_session()
@@ -111,5 +104,5 @@ async def main():
         run_single_client(),
         irc.connect()
     )
-    
+
 asyncio.run(main())

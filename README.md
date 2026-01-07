@@ -23,6 +23,7 @@ https://osu.ppy.sh/home/account/edit
 弹幕指令：  
 点歌 b(bid)  
 点歌 s(sid)
+点歌 (bid/sid)
 
 其他设置：  
 api_server可以设置下列api，设置后将会从指定的服务器获取谱面信息   

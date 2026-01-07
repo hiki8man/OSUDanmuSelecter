@@ -2,5 +2,6 @@
     "osu_username":"",
     "irc_password":"",
     "bili_room_id":"",
-    "api_server":"sayo"
+    "api_server":"osu_html"
+
 }

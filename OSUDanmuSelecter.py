@@ -35,7 +35,7 @@ irc = AsyncIRCClient(
 
 def get_mapid(danmu_text:str) -> str|None:
     # 收到明确表名为sid或bid
-    match = re.match(r"^点歌[\s]?/?([bBsS]\d+)",danmu_text)
+    match = re.match(r"^(?:点歌[\s]?/?)?([bBsS]\d+)",danmu_text)
     if match:
         return match.group(1).lower()
 
@@ -104,5 +104,6 @@ async def main():
         run_single_client(),
         irc.connect()
     )
+
 
 asyncio.run(main())

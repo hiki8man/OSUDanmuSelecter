@@ -22,7 +22,7 @@ https://osu.ppy.sh/home/account/edit
 
 弹幕指令：  
 点歌 b(bid)  
-点歌 s(sid)
+点歌 s(sid)   
 点歌 (bid/sid)
 
 其他设置：  

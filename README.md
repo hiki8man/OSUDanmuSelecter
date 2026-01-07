@@ -15,7 +15,7 @@ https://osu.ppy.sh/home/account/edit
     "osu_username":"(你的osu用户名)",
     "irc_password":"(你的irc客服端密码)",
     "bili_room_id":"(你的房间ID)",
-    "api_server":"sayo",
+    "api_server":"osu_html",
 }
 ```
 安装好缺失的库，启动OSUDanmuSelecter.py即可
